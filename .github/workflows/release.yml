@@ -5,7 +5,7 @@ on:
   workflow_dispatch:    # allow to manually trigger this workflow
 jobs:
   release:
-    if: github.repository_owner == 'joernio'
+    if: github.repository_owner != 'joernio'
     concurrency: release
     runs-on: ubuntu-latest
     steps:
@@ -39,10 +39,7 @@ jobs:
           cd joern-cli/target/universal/stage
           ./schema-extender/test.sh
           cd -
-      - run: sbt ciReleaseTagNextVersion ciReleaseSonatype createDistribution
-        env:
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+      - run: sbt createDistribution
       - run: sha512sum target/joern-cli.zip > target/joern-cli.zip.sha512
       - name: Export ENV vars
         run:
