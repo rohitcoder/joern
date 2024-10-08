@@ -33,15 +33,20 @@ jobs:
       # Build querydb.zip using the querydb project
       - run: sbt "project querydb" createDistribution
 
-      # Create release to get upload URL
+      # Get current timestamp for unique tag
+      - name: Get timestamp
+        id: get_timestamp
+        run: echo "TAG_NAME=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+
+      # Create new release with unique tag
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: "v1.0"  # Change this to your release tag
-          release_name: "v1.0"
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: "Release ${{ env.TAG_NAME }}"
           draft: false
           prerelease: false
 
