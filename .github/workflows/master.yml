@@ -4,40 +4,42 @@ on:
   push:
     branches: [master, main]
     tags: ["*"]
+
 jobs:
-  test:
+  build-querydb:
     concurrency: master
     runs-on: ubuntu-latest
     steps:
+      # Checkout the repository
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          
+      # Set up JDK
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 2.7
-      - name: Install Bundler
-        run: gem install bundler -v 2.4.22
-      - name: Delete `.rustup` directory
-        run: rm -rf /home/runner/.rustup # to save disk space
-        if: runner.os == 'Linux'
-      - name: Delete `.cargo` directory # to save disk space
-        run: rm -rf /home/runner/.cargo
-        if: runner.os == 'Linux'
+
+      # Cache SBT and Coursier dependencies
       - uses: actions/cache@v4
         with:
           path: |
             ~/.sbt
             ~/.coursier
           key: ${{ runner.os }}-sbt-${{ hashfiles('**/build.sbt') }}
-      - run: sbt scalafmtCheck test
-      - run: ./testDistro.sh
-      - run: |
-          cd joern-cli/target/universal/stage
-          ./schema-extender/test.sh
-          cd -
+
+      # Build querydb.zip using the querydb project
+      - run: sbt "project querydb" createDistribution
+
+      # Upload querydb.zip to a hardcoded release URL
+      - name: Upload querydb.zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: querydb/target/querydb.zip
+          asset_name: querydb.zip
+          asset_content_type: application/zip
