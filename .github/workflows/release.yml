@@ -17,8 +17,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-      - run: sbt createDistribution
-      - run: sbt "querydb/runMain io.joern.dumpq.Main"
+      - run: sbt "project querydb" createDistribution
       - name: Upload querydb.zip
         uses: actions/upload-release-asset@v1
         env:
